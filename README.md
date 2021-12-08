@@ -6,6 +6,8 @@ Projeto desenvolvido com o framework Flutter e linguagem Dart.
 
 Um projeto desenvolvido para validar o gerenciamento de estados do Flutter com Providers.
 
+https://user-images.githubusercontent.com/11981035/145136401-aa936591-3844-459f-bf94-1f1e85aadceb.mp4
+
 ### Widgets utilizados
 * MultiProvider
 * ChangeNotifierProvider
@@ -27,6 +29,7 @@ Um projeto desenvolvido para validar o gerenciamento de estados do Flutter com P
 * Divider
 * Spacer
 * TextButton
+
 * Container
 * Padding
 * Expanded
