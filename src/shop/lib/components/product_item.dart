@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shop/models/product.dart';
+import 'package:shop/models/product_list.dart';
+import 'package:shop/utils/app_routes.dart';
 
 class ProductItem extends StatelessWidget {
   const ProductItem(this.product, {Key? key}) : super(key: key);
@@ -17,11 +20,44 @@ class ProductItem extends StatelessWidget {
         child: Row(
           children: [
             IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).pushNamed(
+                    AppRoutes.PRODUCTS_FORM,
+                    arguments: product,
+                  );
+                },
                 icon: Icon(Icons.edit),
                 color: Theme.of(context).colorScheme.primary),
             IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text("Excluir produto"),
+                      content: Text("Tem certeza deseja exclui o produto?"),
+                      actions: [
+                        TextButton(
+                          child: Text("Não"),
+                          onPressed: () {
+                            Navigator.of(ctx).pop(false);
+                          },
+                        ),
+                        TextButton(
+                          child: Text("Sim"),
+                          onPressed: () {
+                            Navigator.of(ctx).pop(true);
+                          },
+                        ),
+                      ],
+                    ),
+                  ).then((value) => {
+                        if (value ?? false)
+                          Provider.of<ProductList>(
+                            context,
+                            listen: false,
+                          ).removeProduct(product)
+                      });
+                },
                 icon: Icon(Icons.delete),
                 color: Theme.of(context).errorColor),
           ],
