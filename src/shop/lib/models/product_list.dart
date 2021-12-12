@@ -30,9 +30,9 @@ class ProductList with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addProduct(Product product) {
-    var request = http.post(
-      Uri.parse('$_baseUrl/products'),
+  Future<void> addProduct(Product product) async {
+    var response = await http.post(
+      Uri.parse('$_baseUrl/products.json'),
       body: jsonEncode(
         {
           "name": product.name,
@@ -44,21 +44,19 @@ class ProductList with ChangeNotifier {
       ),
     );
 
-    return request.then<void>((response) {
-      final id = jsonDecode(response.body)['name'];
-      _items.add(Product(
-        id: id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        imageUrl: product.imageUrl,
-        isFavorite: product.isFavorite,
-      ));
-      notifyListeners();
-    });
+    final id = jsonDecode(response.body)['name'];
+    _items.add(Product(
+      id: id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      isFavorite: product.isFavorite,
+    ));
+    notifyListeners();
   }
 
-  Future<void> saveProduct(Map<String, Object> data) {
+  Future<void> saveProduct(Map<String, Object> data) async {
     bool hasId = data['id'] != null;
 
     final product = Product(
