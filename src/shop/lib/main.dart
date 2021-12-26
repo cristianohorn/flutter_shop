@@ -10,7 +10,6 @@ import 'package:shop/pages/orders_page.dart';
 import 'package:shop/pages/product_detail_page.dart';
 import 'package:shop/pages/product_form_page.dart';
 import 'package:shop/pages/products_page.dart';
-import 'package:shop/pages/products_overview_page.dart';
 import 'package:shop/utils/app_routes.dart';
 
 import 'models/cart.dart';
@@ -26,10 +25,24 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ProductList()),
-        ChangeNotifierProvider(create: (_) => Cart()),
-        ChangeNotifierProvider(create: (_) => OrderList()),
         ChangeNotifierProvider(create: (_) => Auth()),
+        ChangeNotifierProxyProvider<Auth, ProductList>(
+          create: (_) => ProductList(),
+          update: (ctx, auth, previus) => ProductList(
+            auth.token ?? '',
+            auth.userId ?? '',
+            previus?.items ?? [],
+          ),
+        ),
+        ChangeNotifierProxyProvider<Auth, OrderList>(
+          create: (_) => OrderList(),
+          update: (ctx, auth, previus) => OrderList(
+            auth.token ?? '',
+            auth.userId ?? '',
+            previus?.items ?? [],
+          ),
+        ),
+        ChangeNotifierProvider(create: (_) => Cart()),
       ],
       child: MaterialApp(
         title: 'HS - Horn Store',

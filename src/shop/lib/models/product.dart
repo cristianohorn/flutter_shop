@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
 import 'package:shop/exceptions/http_exception.dart';
 import 'package:shop/utils/constants.dart';
 import 'package:http/http.dart' as http;
@@ -28,13 +27,11 @@ class Product extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toogleFavorite() async {
+  Future<void> toogleFavorite(String token, String userId) async {
     _toogleFavorite();
-    final response = await http.patch(
-      Uri.parse('${Constants.PRODUCT_BASE_URL}/$id.json'),
-      body: jsonEncode(
-        {"isFavorite": isFavorite},
-      ),
+    final response = await http.put(
+      Uri.parse('${Constants.USER_FAVORITE_URL}/$userId/$id.json?auth=$token'),
+      body: jsonEncode(isFavorite),
     );
 
     if (response.statusCode >= 400) {

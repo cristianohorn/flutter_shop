@@ -7,29 +7,32 @@ import 'package:shop/models/order.dart';
 import 'package:shop/utils/constants.dart';
 
 class OrderList with ChangeNotifier {
+  final String _token;
+  final String _userId;
   List<Order> _items = [];
 
+  OrderList([this._token = '', this._userId = '', this._items = const []]);
   List<Order> get items => [..._items];
 
   int get itemsCount => _items.length;
 
   Future<void> addOrder(Cart cart) async {
     final date = DateTime.now();
-    final response =
-        await http.post(Uri.parse('${Constants.ORDER_BASE_URL}.json'),
-            body: jsonEncode({
-              "total": cart.totalAmount,
-              "date": date.toIso8601String(),
-              "products": cart.items.values
-                  .map((cartItem) => {
-                        "id": cartItem.id,
-                        "productId": cartItem.productId,
-                        "name": cartItem.name,
-                        "quantity": cartItem.quantity,
-                        "price": cartItem.price,
-                      })
-                  .toList(),
-            }));
+    final response = await http.post(
+        Uri.parse('${Constants.ORDER_BASE_URL}/$_userId.json?auth=${_token}'),
+        body: jsonEncode({
+          "total": cart.totalAmount,
+          "date": date.toIso8601String(),
+          "products": cart.items.values
+              .map((cartItem) => {
+                    "id": cartItem.id,
+                    "productId": cartItem.productId,
+                    "name": cartItem.name,
+                    "quantity": cartItem.quantity,
+                    "price": cartItem.price,
+                  })
+              .toList(),
+        }));
 
     final orderId = jsonDecode(response.body)['name'];
     if (response.statusCode >= 400) {}
@@ -48,14 +51,16 @@ class OrderList with ChangeNotifier {
   }
 
   Future<void> loadOrders() async {
-    _items.clear();
-    final response =
-        await http.get(Uri.parse('${Constants.ORDER_BASE_URL}.json'));
+    // _items.clear();
+
+    final List<Order> items = [];
+    final response = await http
+        .get(Uri.parse('${Constants.ORDER_BASE_URL}/$_userId.json?auth=${_token}'));
     if (response.body == 'null') return;
 
     Map<String, dynamic> data = jsonDecode(response.body);
     data.forEach((orderId, orderData) {
-      _items.add(
+      items.add(
         Order(
           id: orderId,
           total: orderData['total'],
@@ -74,7 +79,8 @@ class OrderList with ChangeNotifier {
         ),
       );
     });
+
+    _items = items.reversed.toList();
     notifyListeners();
-    //
   }
 }
