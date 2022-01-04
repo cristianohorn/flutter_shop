@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shop/data/store.dart';
 import 'package:shop/exceptions/auth_exception.dart';
 
 class Auth with ChangeNotifier {
@@ -10,11 +11,11 @@ class Auth with ChangeNotifier {
   String? _token;
   String? _email;
   String? _userId;
-  DateTime? _expireDate;
+  DateTime? _expiryDate;
   Timer? _logoutTimer;
 
   bool get isAuth {
-    final _isValid = _expireDate?.isAfter(DateTime.now()) ?? false;
+    final _isValid = _expiryDate?.isAfter(DateTime.now()) ?? false;
     return _isValid && _token != null;
   }
 
@@ -53,12 +54,39 @@ class Auth with ChangeNotifier {
       _token = body['idToken'];
       _email = body['email'];
       _userId = body['localId'];
-      _expireDate = DateTime.now().add(
+      _expiryDate = DateTime.now().add(
         Duration(
           seconds: int.parse(body['expiresIn']),
         ),
       );
+
+      Store.saveMap('userData', {
+        'token': _token,
+        'email': _email,
+        'userId': _userId,
+        'expiryDate': _expiryDate!.toIso8601String(),
+      });
+      final dd = await Store.getMap('userData');
+
+      print(dd);
+
+      _autoLogout();
+      notifyListeners();
     }
+  }
+
+  Future<void> tryAutoLogin() async {
+    if (isAuth) return;
+    final userData = await Store.getMap('userData');
+    print(userData);
+    if (userData.isEmpty) return;
+    final expiryDate = DateTime.parse(userData['expiryDate']);
+    if (expiryDate.isBefore(DateTime.now())) return;
+    _token = userData['token'];
+    _email = userData['email'];
+    _userId = userData['_userId'];
+    _expiryDate = expiryDate;
+
     _autoLogout();
     notifyListeners();
   }
@@ -75,8 +103,11 @@ class Auth with ChangeNotifier {
     this._userId = null;
     this._token = null;
     this._email = null;
-    this._expireDate = null;
-    notifyListeners();
+    this._expiryDate = null;
+    _clearLogoutTimer();
+    Store.remove('userData').then((value) {
+      notifyListeners();
+    });
   }
 
   void _clearLogoutTimer() {
@@ -86,7 +117,7 @@ class Auth with ChangeNotifier {
 
   void _autoLogout() {
     _clearLogoutTimer();
-    final _timeToLogout = _expireDate?.difference(DateTime.now()).inSeconds;
+    final _timeToLogout = _expiryDate?.difference(DateTime.now()).inSeconds;
     _logoutTimer = Timer(
       Duration(seconds: _timeToLogout ?? 0),
       logout,
